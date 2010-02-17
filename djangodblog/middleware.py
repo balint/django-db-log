@@ -9,9 +9,15 @@ class DBLogMiddleware(object):
     def process_exception(self, request, exception):
         if not getattr(settings, 'DBLOG_CATCH_404_ERRORS', False) and isinstance(exception, Http404):
             return
+            
+        if hasattr(request, 'session'):
+            session_data = request.session.load()
+        else:
+            session_data = None
 
         Error.objects.create_from_exception(exception, url=request.build_absolute_uri(), data=dict(
             META=request.META,
             POST=request.POST,
             GET=request.GET,
+            SESSION=session_data,
         ))
